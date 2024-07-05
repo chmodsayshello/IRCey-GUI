@@ -162,19 +162,8 @@ void create_new_server_dialog(void) {
         gtk_container_add(GTK_CONTAINER(sizers), gtk_label_new("Username"));
 
         username_box = gtk_entry_new();
-        gtk_widget_set_hexpand_set(username_box, TRUE);
+        gtk_widget_set_vexpand_set(username_box, TRUE);
         gtk_container_add(GTK_CONTAINER(sizers), username_box);
-
-        gtk_container_add(GTK_CONTAINER(dialog_content_area), sizers);
-    }
-
-    { //Third row
-        sizers = gtk_box_new(HORIZONTAL, 2);
-
-        gtk_container_add(GTK_CONTAINER(sizers), gtk_label_new("Channels "));
-
-        channel_box = gtk_entry_new();
-        gtk_container_add(GTK_CONTAINER(sizers), channel_box);
 
         gtk_container_add(GTK_CONTAINER(dialog_content_area), sizers);
     }
