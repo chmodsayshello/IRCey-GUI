@@ -264,8 +264,9 @@ void IRConUserLeave (const struct ircClient* client, const char* channel, const 
 }
 
 void IRConUserWhoIsInfo (const struct ircClient* client, const char* nick, const char* user, const char* realname, const char* hostname) {
-    char message[58 + (strlen(nick) * 2) + strlen(user) + strlen(realname) + strlen(hostname)];
-    sprintf(message, "Information on :%s\nNick: %s\nUsername: %s\nReal Name: %s\nHostname: %s", nick, nick, user, realname, hostname);
+    size_t size = 58 + (strlen(nick) * 2) + strlen(user) + strlen(realname) + strlen(hostname);
+    char message[size];
+    snprintf(message, size, "Information on :%s\nNick: %s\nUsername: %s\nReal Name: %s\nHostname: %s", nick, nick, user, realname, hostname);
     GtkWidget *dialog = gtk_message_dialog_new(GTK_WINDOW(mainWindow),
                             GTK_DIALOG_MODAL,
                             GTK_MESSAGE_INFO,

@@ -38,14 +38,15 @@ char* getLocalTimeString(void) {
     time_t timet = time(NULL);
     struct tm* info = localtime(&timet);
     char* out = malloc(9);
-    sprintf(out, "%2i:%02i:%02i", info->tm_hour, info->tm_min, info->tm_sec);
+    snprintf(out, 9, "%2i:%02i:%02i", info->tm_hour, info->tm_min, info->tm_sec);
     return out;
 }
 
 char* formatChatMessage(const char* author, const char* message) {
-    char* out = malloc(24 + strlen(author) + strlen(message));
+    size_t size = 24 + strlen(author) + strlen(message);
+    char* out = malloc(size);
     char* timestr = getLocalTimeString();
-    sprintf(out, "[%s] <%s>: %s", timestr, author, message);
+    snprintf(out, size, "[%s] <%s>: %s", timestr, author, message);
     free(timestr);
     return out;
 }
