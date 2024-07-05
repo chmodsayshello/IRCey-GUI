@@ -18,8 +18,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-#define DEBUG
-
 /* +++++Documentation References+++++
  * 
  * R1 (shutdown): https://www.gnu.org/software/libc/manual/html_node/Closing-a-Socket.html
