@@ -175,6 +175,18 @@ void GUI_on_whois_user_context(GtkButton* button, gpointer data) {
     requestUserInformation(getCurrentClient(), name);
 }
 
+static char* HLP_FILE_CHANNEL_DATA_EXTRACT(char* buff, const char* channel) {
+    const char* buffchannel = buff + 1;
+    char* data = strchr(buff, '!');
+    if (data == NULL) { return NULL; }
+    *data = '\0';
+    data++;
+
+    if (strcmp(buffchannel, channel) != 0) { return NULL; }
+
+    return data;
+}
+
 void GUI_on_select_channel(GtkTreeView* stree, gpointer data) {
     GtkTreeStore* store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(servertree)));
     GtkTreeIter iter;
@@ -199,18 +211,20 @@ void GUI_on_select_channel(GtkTreeView* stree, gpointer data) {
     while(fgets(buff, size, file)) {
         switch (*buff) {
             case 'M':
-                add_line_to_chat_no_newline(contents);
+                add_line_to_chat_no_newline(buff + 1); // SKIP 'M'
             break;
 
-            case 'C':
-                char* message = strchr(buff, '!');
-                assert(message != NULL);
-                *message = '\0';
-                message++;
+            case 'C': case  'U':
+                const char* line = HLP_FILE_CHANNEL_DATA_EXTRACT(buff, (char*) selected_string);
+                
+                if (line == NULL) {
+                    #ifdef DEBUG
+                    printf("line == NULL! (%s:%i) buff: %s", __FILE__, __LINE__, buff);
+                    #endif
+                    break;
+                }
 
-                if (strcmp(selected_string, contents) != 0) { break; }
-
-                add_line_to_chat_no_newline(message);
+                add_line_to_chat_no_newline(line);
             break;
         }
     }
@@ -243,23 +257,32 @@ void IRConNamesList (const struct ircClient* client, struct nameList list) {
 }
 
 void IRConUserJoin (const struct ircClient* client, const char* channel, const char* user) {
-    char* cn = getCurrentChannelName();
-    if (cn != NULL && strcmp(cn, channel) != 0) { return; }
+    const char* currentChannel = getCurrentChannelName();
+    if (currentChannel == NULL) { return; }
+    FILE* file = getCurrentFile();
     size_t max = 6 + strlen(user) + strlen(channel);
     char msg[max];
     snprintf(msg, max, "[+] %s %s", user, channel);
+    fprintf(file, "U%s!%s\n", channel, msg);
+    fflush(file);
 
+    if (strcmp(currentChannel, channel) != 0) { return; }
     add_line_to_chat(msg);
 }
 
 void IRConUserLeave (const struct ircClient* client, const char* channel, const char* user, const char* reason) {
-    assert(channel != NULL);
     const char* currentChannel = getCurrentChannelName();
-    if (currentChannel == NULL || (strcmp(currentChannel, channel) != 0 && *channel != '\0')) { return; }
+    if (currentChannel == NULL) { return; }
+
+    FILE* file = getCurrentFile();
+    
     size_t max = 7 + strlen(user) + strlen(channel) + strlen(reason);
     char msg[max];
     snprintf(msg, max, "[-] %s %s %s", user, channel, reason);
+    fprintf(file, "U%s!%s\n", channel, msg);
+    fflush(file);
 
+    if ((strcmp(currentChannel, channel) != 0 && *channel != '\0')) { return; }
     add_line_to_chat(msg);
 }
 

@@ -16,6 +16,7 @@ void GUI_on_message_enter(GtkWidget* widget, gpointer data);
 void GUI_on_select_user(GtkListBox *box, GtkListBoxRow *row, gpointer user_data);
 void GUI_on_message_user_context(GtkButton* button, gpointer data);
 void GUI_on_whois_user_context(GtkButton* button, gpointer data);
+static char* HLP_FILE_CHANNEL_DATA_EXTRACT(char* buff, const char* channel);
 void GUI_on_select_channel(GtkTreeView* stree, gpointer data);
 void GUI_on_channel_add(GtkWidget* widget, gpointer data);
 void GUI_on_new_channel_dialog_confirm(char* channel);
