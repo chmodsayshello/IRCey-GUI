@@ -130,10 +130,7 @@ static Packet parsePacket(struct ircClient* client, char* packetString) {
         //Parsing Username
         char* unameEndPtr;
         for(char* c2=packetString + 1; *c2 != '!'; c2++) {
-            if (c2 > packetString + 21 || *c2 == '\0') { 
-                packet.PacketType = IGNORE;
-                return packet;
-            }
+            if (c2 > packetString + 21 || *c2 == '\0') { goto IGNORE_PKT; }
             unameEndPtr=c2;
         }
         unameEndPtr++;
@@ -156,10 +153,7 @@ static Packet parsePacket(struct ircClient* client, char* packetString) {
     if (c != NULL ){ //Namelist
         packet.PacketType = USERLIST;
         c = strchr(c, ':');
-        if (c == NULL) {
-            packet.PacketType = IGNORE;
-            return packet;
-        }
+        if (c == NULL) { goto IGNORE_PKT; }
         char* channelName = c - 1;
         {
             *c = '\0'; //terminator for channelname
@@ -171,10 +165,7 @@ static Packet parsePacket(struct ircClient* client, char* packetString) {
         c++;
         {
             char* nameend = strchr(c, '\0');
-            if(nameend == NULL) {
-                packet.PacketType = IGNORE;
-                return packet;
-            }
+            if(nameend == NULL) { goto IGNORE_PKT; }
             *nameend = '\0';
         }
         char* name = strtok(c, " ");
@@ -229,20 +220,14 @@ static Packet parsePacket(struct ircClient* client, char* packetString) {
                 char* name = packetString + 1;
                 {
                     char* hostname = strchr(name, '!');
-                    if(hostname == NULL) {
-                        packet.PacketType = IGNORE;
-                        return packet;
-                    }
+                    if(hostname == NULL) { goto IGNORE_PKT; }
                     *hostname = '\0';
                 }
 
                 c += 4; // channel / reason parsing;
 
                 char* reason = strchr(c, ' ');
-                if (reason == NULL) {
-                    packet.PacketType = IGNORE;
-                    return packet;
-                }
+                if (reason == NULL) { goto IGNORE_PKT; }
                 *reason = '\0';
                 reason++;
 
@@ -264,10 +249,7 @@ static Packet parsePacket(struct ircClient* client, char* packetString) {
         if (c != NULL) {
             packet.PacketType = MODT;
             const size_t minLen = 5 + strlen(client->username);
-            if (strlen(c) <= minLen) { 
-                packet.PacketType = IGNORE;
-                return packet;
-            }
+            if (strlen(c) <= minLen) { goto IGNORE_PKT; }
             packet.data.MODTPacket.modt = c + minLen;
             return packet;
         }
@@ -279,11 +261,14 @@ static Packet parsePacket(struct ircClient* client, char* packetString) {
             c += 5 + strlen(client->username);
             packet.data.UserInfoPacket.user = c;
             c = strchr(c, ' ');
+            if (c == NULL) { goto IGNORE_PKT; }
             *c = '\0';
             packet.data.UserInfoPacket.username = ++c;
             c = strchr(c, ' ');
+            if (c == NULL) { goto IGNORE_PKT; }
             packet.data.UserInfoPacket.hostname = ++c;
             c = strstr(c, " * :");
+            if (c == NULL) { goto IGNORE_PKT; }
             *c = '\0';
             c += 4;
             packet.data.UserInfoPacket.realname = c;
@@ -300,6 +285,7 @@ static Packet parsePacket(struct ircClient* client, char* packetString) {
         return packet;
     }
     
+    IGNORE_PKT:
     packet.PacketType = IGNORE;
     return packet;
 }
@@ -307,7 +293,7 @@ static Packet parsePacket(struct ircClient* client, char* packetString) {
 static void handlePacket(Packet* pkt) {
     switch (pkt->PacketType) {
         case IGNORE:
-            break;
+        break;
 
         case PING:
             sendPacket(pkt->client->connection, "PONG :%s\r", pkt->data.PingPacket.ping);
